@@ -33,6 +33,8 @@
         this.load.audio("background-music","assets/8bit-sound.mp3")
         this.load.image("background", "assets/background/background/background.png")
         this.load.image("ground", "assets/background/background/Ground.png")
+        this.load.image("lamp", "assets/background/decorations/lamp.png")
+        this.load.image("fence", "assets/background/decorations/fence_1.png")
         this.load.spritesheet("hero", "assets/knight/_Idle.png", { frameWidth: 150, frameHeight: 80 });
       }
 
@@ -46,6 +48,21 @@
         ground.create(400,568, "ground").setScale(1.5).refreshBody();
         let background_sound = this.sound.add("background-music")
 
+        // Adding lamp
+        this.add.image(580, 489, "lamp").setScale(1.5);
+        this.add.image(0, 521, "fence");
+        this.add.image(65, 521, "fence");
+        this.add.image(130, 521, "fence");
+        this.add.image(195, 521, "fence");
+        this.add.image(260, 521, "fence");
+        this.add.image(325, 521, "fence");
+        this.add.image(390, 521, "fence");
+        this.add.image(455, 521, "fence");
+        this.add.image(520, 521, "fence");
+        this.add.image(650, 521, "fence");
+        this.add.image(715, 521, "fence");
+        this.add.image(780, 521, "fence");
+        
 
         // Adding hero
         hero = this.physics.add.sprite(200,360,"hero")
