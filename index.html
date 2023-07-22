@@ -24,18 +24,37 @@
       };
 
       var game = new Phaser.Game(config);
+      var ground;
+      var hero;
 
       function preload() {
         this.load.audio("background-music","assets/8bit-sound.mp3")
+        this.load.image("background", "assets/background/background/background.png")
+        this.load.image("ground", "assets/background/background/Ground.png")
+        this.load.spritesheet("hero", "assets/knight/_Idle.png", { frameWidth: 150, frameHeight: 80 });
       }
 
       function create() {
+
+        // Need to make a group of images
+        this.add.image(400,268, "background").setScale(1.5);
+        ground = this.physics.add.staticGroup();
+        
+        // Creating ground
+        ground.create(400,568, "ground").setScale(1.5).refreshBody();
         let background_sound = this.sound.add("background-music")
-        background_sound.play();        
+
+
+        // Adding hero
+        hero = this.physics.add.sprite(200,360,"hero")
+        hero.setScale(1.5);
+        hero.setBounce(0.2);
+        hero.setCollideWorldBounds(true);
+        this.physics.add.collider(ground, hero);
+        // background_sound.play();        
       }
 
       function update() {
-        
       }
     </script>
     <div id="phaser" style="display:flex; align-items: center; justify-content: center; height: 100vh"></div>
