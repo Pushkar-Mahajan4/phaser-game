@@ -31,17 +31,25 @@
       var cursors;
       var attack_l;
       var attack_r;
+      var canJump;
 
       function preload() {
+
+        // Audio
         this.load.audio("background-music","assets/8bit-sound.mp3")
+
+        // Map sprite sheets
         this.load.image("background", "assets/background/background/background_2.png")
         this.load.image("ground", "assets/background/background/Ground.png")
         this.load.image("lamp", "assets/background/decorations/lamp.png")
         this.load.image("fence", "assets/background/decorations/fence_1.png")
+
+        // Hero Sprite sheets
         this.load.spritesheet("hero", "assets/knight/_Idle.png", { frameWidth: 150, frameHeight: 80 });
         this.load.spritesheet("hero_right", "assets/knight/_Run_right.png", { frameWidth: 120, frameHeight: 80 });
         this.load.spritesheet("hero_left", "assets/knight/_Run_left.png", { frameWidth: 120, frameHeight: 80 });
         this.load.spritesheet("attack_right", "assets/knight/_AttackNoMovement.png", { frameWidth: 120, frameHeight: 80 });
+        this.load.spritesheet("hero_jump", "assets/knight/_Jump.png", { frameWidth: 120, frameHeight: 80 });
       }
 
       function create() {
@@ -81,6 +89,9 @@
         hero.setCollideWorldBounds(true);
         this.physics.add.collider(ground, hero);
 
+
+        // Animations section
+
         this.anims.create({
         key: 'left',
         frames: this.anims.generateFrameNumbers('hero_left', { start: 0, end: 9 }),
@@ -110,6 +121,14 @@
         repeat: -1
       });
 
+      // Jump animation
+      this.anims.create({
+        key: 'hero_jump',
+        frames: this.anims.generateFrameNumbers('hero_jump', { start: 0, end: 2 }),
+        frameRate: 10,
+        repeat: -1
+      });
+
       cursors = this.input.keyboard.createCursorKeys();
       // background_sound.play();        
       }
@@ -125,13 +144,26 @@
           hero.setVelocityX(160);
           hero.anims.play('right', true);
         }
+
         else if(attack_r.isDown){
           hero.setVelocityX(0);
           hero.anims.play("attack_right", true);
         }
+
+        else if (cursors.up.isDown)
+        {
+          if(canJump){
+            hero.setVelocityY(-200);
+            hero.anims.play('hero_jump', true);
+          }
+          canJump = false; 
+        }
         else{
           hero.setVelocityX(0);
           hero.anims.play("idle");
+          if(hero.body.onFloor()){
+            canJump = true;
+          }
         }
       }
     </script>
