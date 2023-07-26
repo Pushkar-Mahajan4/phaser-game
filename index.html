@@ -28,6 +28,7 @@
       var game = new Phaser.Game(config);
       var ground;
       var hero;
+      var skeleton;
       var cursors;
       var attack_l;
       var attack_r;
@@ -51,6 +52,9 @@
         this.load.spritesheet("attack_right", "assets/knight/_AttackNoMovement.png", { frameWidth: 120, frameHeight: 80 });
         this.load.spritesheet("attack_left", "assets/knight/_AttackLeft.png", { frameWidth: 120, frameHeight: 80 });
         this.load.spritesheet("hero_jump", "assets/knight/_Jump.png", { frameWidth: 120, frameHeight: 80 });
+
+        // Skeleton Sprite sheets
+        this.load.spritesheet("skeleton", "assets/skeleton/Skeleton_Warrior/Idle.png", { frameWidth: 130 , frameHeight: 150});
       }
 
       function create() {
@@ -90,6 +94,12 @@
         hero.setCollideWorldBounds(true);
         this.physics.add.collider(ground, hero);
 
+
+        // Adding Skeleton villian
+        skeleton = this.physics.add.sprite(400, 360, "skeleton");
+        skeleton.setBounce(0.2);
+        skeleton.setCollideWorldBounds(true);
+        this.physics.add.collider(ground, skeleton);
 
         // Animations section
 
@@ -178,6 +188,26 @@
           if(hero.body.onFloor()){
             canJump = true;
           }
+        }
+
+        if (cursors.left.isDown && cursors.up.isDown)
+        {
+          if(canJump){
+            hero.setVelocityY(-200);
+            hero.setVelocityX(-160);
+            hero.anims.play('hero_jump', true);
+          }
+          canJump = false; 
+        }
+
+        if (cursors.right.isDown && cursors.up.isDown)
+        {
+          if(canJump){
+            hero.setVelocityY(-200);
+            hero.setVelocityX(160);
+            hero.anims.play('hero_jump', true);
+          }
+          canJump = false; 
         }
       }
     </script>
