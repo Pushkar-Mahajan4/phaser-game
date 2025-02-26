@@ -15,13 +15,23 @@
         physics: {
           default: "arcade",
           arcade: {
-            gravity: { y: 200 },
+            gravity: { y: 300 },
+            // debug: true, // Commenting out debug mode which shows collision boxes
+            friction: { x: 0.99 },
+            drag: { x: 1000, y: 100 },
+            maxVelocity: { x: 300, y: 400 },
+            checkCollision: {
+              up: true,
+              down: true,
+              left: false,
+              right: false,
+            },
           },
         },
         scene: {
           preload: preload,
           create: create,
-          update: update
+          update: update,
         },
       };
 
@@ -35,41 +45,65 @@
       var canJump;
 
       function preload() {
-
         // Audio
-        this.load.audio("background-music","assets/8bit-sound.mp3")
+        this.load.audio("background-music", "assets/8bit-sound.mp3");
 
         // Map sprite sheets
-        this.load.image("background", "assets/background/background/background_2.png")
-        this.load.image("ground", "assets/background/background/Ground.png")
-        this.load.image("lamp", "assets/background/decorations/lamp.png")
-        this.load.image("fence", "assets/background/decorations/fence_1.png")
+        this.load.image(
+          "background",
+          "assets/background/background/background_2.png"
+        );
+        this.load.image("ground", "assets/background/background/Ground.png");
+        this.load.image("lamp", "assets/background/decorations/lamp.png");
+        this.load.image("fence", "assets/background/decorations/fence_1.png");
 
         // Hero Sprite sheets
-        this.load.spritesheet("hero", "assets/knight/_Idle.png", { frameWidth: 150, frameHeight: 80 });
-        this.load.spritesheet("hero_right", "assets/knight/_Run_right.png", { frameWidth: 120, frameHeight: 80 });
-        this.load.spritesheet("hero_left", "assets/knight/_Run_left.png", { frameWidth: 120, frameHeight: 80 });
-        this.load.spritesheet("attack_right", "assets/knight/_AttackNoMovement.png", { frameWidth: 120, frameHeight: 80 });
-        this.load.spritesheet("attack_left", "assets/knight/_AttackLeft.png", { frameWidth: 120, frameHeight: 80 });
-        this.load.spritesheet("hero_jump", "assets/knight/_Jump.png", { frameWidth: 120, frameHeight: 80 });
+        this.load.spritesheet("hero", "assets/knight/_Idle.png", {
+          frameWidth: 150,
+          frameHeight: 80,
+        });
+        this.load.spritesheet("hero_right", "assets/knight/_Run_right.png", {
+          frameWidth: 120,
+          frameHeight: 80,
+        });
+        this.load.spritesheet("hero_left", "assets/knight/_Run_left.png", {
+          frameWidth: 120,
+          frameHeight: 80,
+        });
+        this.load.spritesheet(
+          "attack_right",
+          "assets/knight/_AttackNoMovement.png",
+          { frameWidth: 120, frameHeight: 80 }
+        );
+        this.load.spritesheet("attack_left", "assets/knight/_AttackLeft.png", {
+          frameWidth: 120,
+          frameHeight: 80,
+        });
+        this.load.spritesheet("hero_jump", "assets/knight/_Jump.png", {
+          frameWidth: 120,
+          frameHeight: 80,
+        });
 
         // Skeleton Sprite sheets
-        this.load.spritesheet("skeleton", "assets/skeleton/Skeleton_Warrior/Idle.png", { frameWidth: 130 , frameHeight: 150});
+        // this.load.spritesheet(
+        //   "skeleton",
+        //   "/assets/skeleton/Skeleton_Warrior/Idle.png",
+        //   { frameWidth: 130, frameHeight: 150 }
+        // );
       }
 
       function create() {
-
         // Need to make a group of images
-        this.add.image(400,268, "background").setScale(1.2);
+        this.add.image(400, 268, "background").setScale(1.2);
         ground = this.physics.add.staticGroup();
 
         // Add Keystrokes for left and right attacks
         attack_l = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
         attack_r = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
-        
+
         // Creating ground
-        ground.create(400,568, "ground").setScale(1.5).refreshBody();
-        let background_sound = this.sound.add("background-music")
+        ground.create(400, 568, "ground").setScale(1.5).refreshBody();
+        let background_sound = this.sound.add("background-music");
 
         // Adding lamp
         this.add.image(580, 489, "lamp").setScale(1.5);
@@ -85,132 +119,142 @@
         this.add.image(650, 521, "fence");
         this.add.image(715, 521, "fence");
         this.add.image(780, 521, "fence");
-        
 
         // Adding hero character
-        hero = this.physics.add.sprite(200,360,"hero");
+        hero = this.physics.add.sprite(200, 360, "hero");
         hero.setScale(1.5);
         hero.setBounce(0.2);
         hero.setCollideWorldBounds(true);
         this.physics.add.collider(ground, hero);
 
-
         // Adding Skeleton villian
-        skeleton = this.physics.add.sprite(400, 360, "skeleton");
-        skeleton.setBounce(0.2);
-        skeleton.setCollideWorldBounds(true);
-        this.physics.add.collider(ground, skeleton);
+        // skeleton = this.physics.add.sprite(400, 360, "skeleton");
+        // skeleton.setBounce(0.2);
+        // skeleton.setCollideWorldBounds(true);
+        // this.physics.add.collider(ground, skeleton);
 
         // Animations section
 
         this.anims.create({
-        key: 'left',
-        frames: this.anims.generateFrameNumbers('hero_left', { start: 0, end: 9 }),
-        frameRate: 10,
-        repeat: -1
-      });
+          key: "left",
+          frames: this.anims.generateFrameNumbers("hero_left", {
+            start: 0,
+            end: 9,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      this.anims.create({
-        key: 'right',
-        frames: this.anims.generateFrameNumbers('hero_right', { start: 0, end: 9 }),
-        frameRate: 10,
-        repeat: -1
-      });
+        this.anims.create({
+          key: "right",
+          frames: this.anims.generateFrameNumbers("hero_right", {
+            start: 0,
+            end: 9,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      this.anims.create({
-        key: 'idle',
-        frames: [ { key: 'hero', frame: 3 } ],
-        frameRate: 10,
-        repeat: -1
-      });
+        this.anims.create({
+          key: "idle",
+          frames: [{ key: "hero", frame: 3 }],
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      // Right attack animation
-      this.anims.create({
-        key: 'attack_right',
-        frames: this.anims.generateFrameNumbers('attack_right', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-      });
+        // Right attack animation
+        this.anims.create({
+          key: "attack_right",
+          frames: this.anims.generateFrameNumbers("attack_right", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      // Left attack animation
-      this.anims.create({
-        key: 'attack_left',
-        frames: this.anims.generateFrameNumbers('attack_left', { start: 0, end: 3 }),
-        frameRate: 10,
-        repeat: -1
-      });
+        // Left attack animation
+        this.anims.create({
+          key: "attack_left",
+          frames: this.anims.generateFrameNumbers("attack_left", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      // Jump animation
-      this.anims.create({
-        key: 'hero_jump',
-        frames: this.anims.generateFrameNumbers('hero_jump', { start: 0, end: 2 }),
-        frameRate: 10,
-        repeat: -1
-      });
+        // Jump animation
+        this.anims.create({
+          key: "hero_jump",
+          frames: this.anims.generateFrameNumbers("hero_jump", {
+            start: 0,
+            end: 2,
+          }),
+          frameRate: 10,
+          repeat: -1,
+        });
 
-      cursors = this.input.keyboard.createCursorKeys();
-      // background_sound.play();        
+        cursors = this.input.keyboard.createCursorKeys();
+        // background_sound.play();
       }
 
       function update() {
+        // Check if hero is on floor to enable jumping
+        if (hero.body.onFloor()) {
+          canJump = true;
+        }
 
-        if (cursors.left.isDown)
-        {
+        if (cursors.left.isDown) {
           hero.setVelocityX(-160);
-          hero.anims.play('left', true);
-        }
-        else if (cursors.right.isDown){
+          hero.anims.play("left", true);
+        } else if (cursors.right.isDown) {
           hero.setVelocityX(160);
-          hero.anims.play('right', true);
-        }
-
-        else if(attack_r.isDown){
+          hero.anims.play("right", true);
+        } else if (attack_r.isDown) {
           hero.setVelocityX(0);
           hero.anims.play("attack_right", true);
-        }
-
-        else if(attack_l.isDown){
+        } else if (attack_l.isDown) {
           hero.setVelocityX(0);
           hero.anims.play("attack_left", true);
-        }
-
-        else if (cursors.up.isDown)
-        {
-          if(canJump){
+        } else if (cursors.up.isDown) {
+          if (canJump) {
             hero.setVelocityY(-200);
-            hero.anims.play('hero_jump', true);
+            hero.anims.play("hero_jump", true);
+            canJump = false;
           }
-          canJump = false; 
-        }
-        else{
+        } else {
           hero.setVelocityX(0);
           hero.anims.play("idle");
-          if(hero.body.onFloor()){
-            canJump = true;
-          }
         }
 
-        if (cursors.left.isDown && cursors.up.isDown)
-        {
-          if(canJump){
+        if (cursors.left.isDown && cursors.up.isDown) {
+          if (canJump) {
             hero.setVelocityY(-200);
             hero.setVelocityX(-160);
-            hero.anims.play('hero_jump', true);
+            hero.anims.play("hero_jump", true);
+            canJump = false;
           }
-          canJump = false; 
         }
 
-        if (cursors.right.isDown && cursors.up.isDown)
-        {
-          if(canJump){
+        if (cursors.right.isDown && cursors.up.isDown) {
+          if (canJump) {
             hero.setVelocityY(-200);
             hero.setVelocityX(160);
-            hero.anims.play('hero_jump', true);
+            hero.anims.play("hero_jump", true);
+            canJump = false;
           }
-          canJump = false; 
         }
       }
     </script>
-    <div id="phaser" style="display:flex; align-items: center; justify-content: center; height: 80vh"></div>
+    <div
+      id="phaser"
+      style="
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 80vh;
+      "
+    ></div>
   </body>
 </html>
