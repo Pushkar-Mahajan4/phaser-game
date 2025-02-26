@@ -38,11 +38,13 @@
       var game = new Phaser.Game(config);
       var ground;
       var hero;
-      var skeleton;
+      var skeletons;
       var cursors;
       var attack_l;
       var attack_r;
       var canJump;
+      var lastSpawnTime = 0;
+      var spawnInterval = 3000; // Spawn every 3 seconds
 
       function preload() {
         // Audio
@@ -85,11 +87,11 @@
         });
 
         // Skeleton Sprite sheets
-        // this.load.spritesheet(
-        //   "skeleton",
-        //   "/assets/skeleton/Skeleton_Warrior/Idle.png",
-        //   { frameWidth: 130, frameHeight: 150 }
-        // );
+        this.load.spritesheet(
+          "skeleton",
+          "assets/skeleton/Skeleton_Warrior/Walk.png",
+          { frameWidth: 130, frameHeight: 150, startFrame: 0, endFrame: 3 }
+        );
       }
 
       function create() {
@@ -127,14 +129,23 @@
         hero.setCollideWorldBounds(true);
         this.physics.add.collider(ground, hero);
 
-        // Adding Skeleton villian
-        // skeleton = this.physics.add.sprite(400, 360, "skeleton");
-        // skeleton.setBounce(0.2);
-        // skeleton.setCollideWorldBounds(true);
-        // this.physics.add.collider(ground, skeleton);
+        // Create skeletons group
+        skeletons = this.physics.add.group();
+        this.physics.add.collider(ground, skeletons);
+        this.physics.add.collider(hero, skeletons);
+
+        // Create skeleton walk animation
+        this.anims.create({
+          key: "skeleton_walk",
+          frames: this.anims.generateFrameNumbers("skeleton", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 8,
+          repeat: -1,
+        });
 
         // Animations section
-
         this.anims.create({
           key: "left",
           frames: this.anims.generateFrameNumbers("hero_left", {
@@ -199,11 +210,47 @@
         // background_sound.play();
       }
 
-      function update() {
+      function spawnSkeleton(scene) {
+        // Randomly choose left or right side
+        const side = Math.random() < 0.5 ? "left" : "right";
+        const x = side === "left" ? -50 : 850;
+        const y = 360;
+
+        const skeleton = skeletons.create(x, y, "skeleton");
+        skeleton.setBounce(0.2);
+        skeleton.setCollideWorldBounds(true);
+        skeleton.play("skeleton_walk");
+
+        // Set velocity based on spawn side
+        const speed = 100;
+        skeleton.setVelocityX(side === "left" ? speed : -speed);
+
+        // Flip sprite based on direction
+        skeleton.flipX = side === "right";
+      }
+
+      function update(time) {
         // Check if hero is on floor to enable jumping
         if (hero.body.onFloor()) {
           canJump = true;
         }
+
+        // Spawn skeletons periodically
+        if (time - lastSpawnTime > spawnInterval) {
+          spawnSkeleton(this);
+          lastSpawnTime = time;
+        }
+
+        // Update skeletons to move towards hero
+        skeletons.getChildren().forEach((skeleton) => {
+          if (skeleton.x < hero.x) {
+            skeleton.setVelocityX(100);
+            skeleton.flipX = false;
+          } else {
+            skeleton.setVelocityX(-100);
+            skeleton.flipX = true;
+          }
+        });
 
         if (cursors.left.isDown) {
           hero.setVelocityX(-160);
