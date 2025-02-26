@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
+    <title>Arrow to move | A/D attack</title>
     <script src="phaser.js"></script>
   </head>
   <body>
@@ -45,6 +46,8 @@
       var canJump;
       var lastSpawnTime = 0;
       var spawnInterval = 3000; // Spawn every 3 seconds
+      var attackBox; // Attack hitbox
+      var isAttacking = false;
 
       function preload() {
         // Audio
@@ -58,10 +61,9 @@
         this.load.image("ground", "assets/background/background/Ground.png");
         this.load.image("lamp", "assets/background/decorations/lamp.png");
         this.load.image("fence", "assets/background/decorations/fence_1.png");
-
         // Hero Sprite sheets
         this.load.spritesheet("hero", "assets/knight/_Idle.png", {
-          frameWidth: 150,
+          frameWidth: 120,
           frameHeight: 80,
         });
         this.load.spritesheet("hero_right", "assets/knight/_Run_right.png", {
@@ -90,6 +92,21 @@
         this.load.spritesheet(
           "skeleton",
           "assets/skeleton/Skeleton_Warrior/Walk.png",
+          { frameWidth: 130, frameHeight: 150, startFrame: 0, endFrame: 3 }
+        );
+        this.load.spritesheet(
+          "skeleton_dead",
+          "assets/skeleton/Skeleton_Warrior/Dead.png",
+          { frameWidth: 130, frameHeight: 150, startFrame: 0, endFrame: 3 }
+        );
+        this.load.spritesheet(
+          "skeleton_attack1",
+          "assets/skeleton/Skeleton_Warrior/Attack_1.png",
+          { frameWidth: 130, frameHeight: 150, startFrame: 0, endFrame: 3 }
+        );
+        this.load.spritesheet(
+          "skeleton_attack3",
+          "assets/skeleton/Skeleton_Warrior/Attack_3.png",
           { frameWidth: 130, frameHeight: 150, startFrame: 0, endFrame: 3 }
         );
       }
@@ -132,12 +149,51 @@
         // Create skeletons group
         skeletons = this.physics.add.group();
         this.physics.add.collider(ground, skeletons);
-        this.physics.add.collider(hero, skeletons);
+        // Remove collision between hero and skeletons
+        this.physics.add.overlap(
+          hero,
+          skeletons,
+          handleAttackCollision,
+          null,
+          this
+        );
 
         // Create skeleton walk animation
         this.anims.create({
           key: "skeleton_walk",
           frames: this.anims.generateFrameNumbers("skeleton", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 8,
+          repeat: -1,
+        });
+
+        // Create skeleton death animation
+        this.anims.create({
+          key: "skeleton_dead",
+          frames: this.anims.generateFrameNumbers("skeleton_dead", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 8,
+          repeat: 0,
+        });
+
+        // Create skeleton attack animations
+        this.anims.create({
+          key: "skeleton_attack1",
+          frames: this.anims.generateFrameNumbers("skeleton_attack1", {
+            start: 0,
+            end: 3,
+          }),
+          frameRate: 8,
+          repeat: -1,
+        });
+
+        this.anims.create({
+          key: "skeleton_attack3",
+          frames: this.anims.generateFrameNumbers("skeleton_attack3", {
             start: 0,
             end: 3,
           }),
@@ -181,7 +237,7 @@
             end: 3,
           }),
           frameRate: 10,
-          repeat: -1,
+          repeat: 0,
         });
 
         // Left attack animation
@@ -192,7 +248,7 @@
             end: 3,
           }),
           frameRate: 10,
-          repeat: -1,
+          repeat: 0,
         });
 
         // Jump animation
@@ -220,6 +276,11 @@
         skeleton.setBounce(0.2);
         skeleton.setCollideWorldBounds(true);
         skeleton.play("skeleton_walk");
+        skeleton.health = 100;
+        skeleton.lastAttackTime = 0;
+        skeleton.isAttacking = false;
+        skeleton.hasReachedHero = false;
+        skeleton.currentAnimation = "skeleton_walk";
 
         // Set velocity based on spawn side
         const speed = 100;
@@ -227,6 +288,18 @@
 
         // Flip sprite based on direction
         skeleton.flipX = side === "right";
+      }
+
+      function handleAttackCollision(hero, skeleton) {
+        if (isAttacking) {
+          skeleton.health -= 100;
+          if (skeleton.health <= 0) {
+            skeleton.play("skeleton_dead");
+            skeleton.on("animationcomplete", function () {
+              skeleton.destroy();
+            });
+          }
+        }
       }
 
       function update(time) {
@@ -241,38 +314,96 @@
           lastSpawnTime = time;
         }
 
-        // Update skeletons to move towards hero
+        // Update skeletons to move towards hero and attack when close
         skeletons.getChildren().forEach((skeleton) => {
-          if (skeleton.x < hero.x) {
-            skeleton.setVelocityX(100);
-            skeleton.flipX = false;
+          if (
+            !skeleton.anims.currentAnim ||
+            skeleton.anims.currentAnim.key !== "skeleton_dead"
+          ) {
+            const distanceToHero = Math.abs(skeleton.x - hero.x);
+
+            if (distanceToHero < 50) {
+              skeleton.hasReachedHero = true;
+            }
+
+            if (skeleton.hasReachedHero) {
+              skeleton.setVelocityX(0);
+
+              // Only start a new attack animation if not currently attacking or playing an animation
+              if (
+                time - skeleton.lastAttackTime > 2000 &&
+                !skeleton.isAttacking &&
+                (!skeleton.anims.currentAnim ||
+                  skeleton.anims.currentAnim.key === "skeleton_walk")
+              ) {
+                skeleton.isAttacking = true;
+                skeleton.lastAttackTime = time;
+                const attackAnim =
+                  Math.random() < 0.5 ? "skeleton_attack1" : "skeleton_attack3";
+                skeleton.currentAnimation = attackAnim;
+                skeleton.play(attackAnim);
+              }
+            } else {
+              if (skeleton.x < hero.x) {
+                skeleton.setVelocityX(100);
+                skeleton.flipX = false;
+              } else {
+                skeleton.setVelocityX(-100);
+                skeleton.flipX = true;
+              }
+
+              if (
+                !skeleton.isAttacking &&
+                skeleton.currentAnimation !== "skeleton_walk"
+              ) {
+                skeleton.currentAnimation = "skeleton_walk";
+                skeleton.play("skeleton_walk", true);
+              }
+            }
           } else {
-            skeleton.setVelocityX(-100);
-            skeleton.flipX = true;
+            skeleton.setVelocityX(0);
           }
         });
 
         if (cursors.left.isDown) {
           hero.setVelocityX(-160);
           hero.anims.play("left", true);
+          isAttacking = false;
         } else if (cursors.right.isDown) {
           hero.setVelocityX(160);
           hero.anims.play("right", true);
+          isAttacking = false;
         } else if (attack_r.isDown) {
           hero.setVelocityX(0);
           hero.anims.play("attack_right", true);
+          isAttacking = true;
+          // Check for skeletons in attack range on right side
+          skeletons.getChildren().forEach((skeleton) => {
+            if (skeleton.x > hero.x && skeleton.x < hero.x + 60) {
+              handleAttackCollision(hero, skeleton);
+            }
+          });
         } else if (attack_l.isDown) {
           hero.setVelocityX(0);
           hero.anims.play("attack_left", true);
+          isAttacking = true;
+          // Check for skeletons in attack range on left side
+          skeletons.getChildren().forEach((skeleton) => {
+            if (skeleton.x < hero.x && skeleton.x > hero.x - 50) {
+              handleAttackCollision(hero, skeleton);
+            }
+          });
         } else if (cursors.up.isDown) {
           if (canJump) {
             hero.setVelocityY(-200);
             hero.anims.play("hero_jump", true);
             canJump = false;
           }
+          isAttacking = false;
         } else {
           hero.setVelocityX(0);
           hero.anims.play("idle");
+          isAttacking = false;
         }
 
         if (cursors.left.isDown && cursors.up.isDown) {
