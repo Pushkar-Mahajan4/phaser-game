@@ -1,3 +1,7 @@
-# My first game created with Phaser JS
+# First game in Phaser JS
 
-## Test
+### Use Arrow keys to move and Jump
+
+### Use A or D to attack the enemies
+
+![Gameplay](image.png)
